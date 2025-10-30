@@ -138,14 +138,23 @@ body {
     transition: background 0.3s ease, border-color 0.3s ease;
 }
 
+#route-info-distance {
+  margin-bottom: 5px;
+}
+
+#route-info-distance, #route-info-time {
+  display: flex;
+  align-items: center;
+}
+
 /* ------------------ THEME TOGGLE BUTTON ------------------ */
 #theme-toggle {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    bottom: 20px;
+    left: 20px;
     width: 50px;
     height: 50px;
-    border-radius: 50%;
+    border-radius: 10px;
     background: linear-gradient(135deg, var(--primary-300) 0%, var(--primary-400) 100%);
     border: none;
     cursor: pointer;
@@ -159,7 +168,7 @@ body {
 }
 
 #theme-toggle:hover {
-    transform: scale(1.1) rotate(15deg);
+    transform: scale(1.2) rotate(5deg);
     box-shadow: 0 6px 20px var(--shadow-accent);
 }
 
@@ -172,7 +181,7 @@ body {
 
 .header h1 {
     font-family: monospace;
-    font-size: 24px;
+    font-size: 3vw;
     color: var(--primary-100);
     margin-bottom: 5px;
 }
@@ -324,6 +333,10 @@ body {
     transition: all 0.3s ease;
     font-size: 13px;
     box-shadow: 0 4px 15px rgba(30, 58, 138, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 }
 
 .poi-btn:hover {
@@ -349,16 +362,20 @@ body {
 }
 
 .map-click-btn {
-    flex: 1;
-    padding: 10px 16px;
-    background: var(--input-bg);
-    color: var(--text-primary);
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 13px;
-    transition: all 0.3s ease;
+    display: flex;
+  align-items: center;           
+  justify-content: center;      
+  gap: 6px;                     
+  flex: 1;
+  padding: 10px 16px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.3s ease;
 }
 
 .map-click-btn:hover {
@@ -402,7 +419,7 @@ body {
   display: block;
   position: fixed;
   left: 37vw;
-  bottom: 6vh;
+  bottom: 7vh;
   z-index: 400;
   font-family: monospace;
   border-radius: 20px;
@@ -459,9 +476,33 @@ body {
         flex-direction: column;
     }
 
+    #theme-toggle {
+        bottom: 9vh !important;
+        left: 88vw !important;
+    }
+
+    #bottom-bar {
+        width: 100vw !important;
+        height: 7vh !important;
+    }
+
+    #status {
+        left: 2vw !important;
+        bottom: 8vh !important;
+    }
+
+    .leaflet-control-attribution.leaflet-control {
+        /* bottom: 6vh !important; */
+        display: none !important;
+    }
+
+    #bottom-bar-text {
+        display: none !important;
+    }
+
     #controls {
         width: 100%;
-        max-height: 40vh;
+        max-height: 35vh;
         border-right: none;
         border-bottom: 2px solid var(--border-accent);
         box-shadow: 0 4px 20px var(--shadow-accent);
@@ -555,4 +596,204 @@ body {
 
 .leaflet-routing-alt:hover {
     background: var(--border-color) !important;
+}
+
+#bottom-bar {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  height: 6vh;
+  z-index: 400;
+  background: linear-gradient(135deg, var(--controls-bg-start) 0%, var(--controls-bg-end) 100%);
+  width: 65vw;
+  border-top: solid green 2px;
+  padding: 5px;
+  display: flex;
+  flex-direction: row-reverse;
+  cursor: pointer;
+}
+
+#sign-in-button {
+  color: white;
+  background: var(--border-accent);
+  border-radius: 10px;
+  padding: 10px;
+  border-color: var(--bg-gradient-end);
+  cursor: pointer;
+  transition: 1s;
+}
+
+#sign-in-button:hover {
+  border-color: green;
+}
+
+/* Controls position of sources/attributions */
+.leaflet-control-attribution.leaflet-control {
+    background: var(--bg-gradient-start);
+    border-top-left-radius: 4px;
+    bottom: 1vh;
+}
+
+.location-display {
+  border-style: solid;
+  border-width: thin;
+  border-radius: 10px;
+  padding-bottom: 1vh;
+  padding-left: 10px;
+  text-align: center;
+  padding-right: 10px;
+  padding-top: 1vh;
+  margin-right: 12px;
+  box-shadow: 0px 0px 4px var(--text-primary);
+}
+
+#locations {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  flex-grow: 1;
+  flex-direction: row-reverse;
+  flex-wrap: wrap;
+  overflow-y: scroll;
+}
+
+#add-location-button {
+  margin: 3px;
+  margin-right: 11px;
+  color: var(--text-primary);
+  background: var(--bg-gradient-start);
+  border-style: none;
+  padding: 7px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 5px green;
+  transition: 0.5s;
+}
+#add-location-button:hover {
+  color: var(--text-secondary);
+  box-shadow: 0px 0px 10px #006880;
+}
+
+
+#bottom-bar-text {
+  vertical-align: middle;
+  padding-top: 1.6vh;
+  margin-left: 11px;
+  font-family: monospace;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+/* MARK: DIALOG STYLES */
+dialog {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(to bottom right, var(--controls-bg-start), var(--controls-bg-end));
+  color: var(--text-primary);
+  box-shadow: 0 8px 30px var(--shadow-accent);
+  max-width: 360px;
+  width: 90%;
+  font-family: system-ui, sans-serif;
+  animation: fadeIn 0.2s ease-out;
+
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+}
+
+#add-location-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+#add-location-form label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+#add-location-form input,
+#add-location-form select {
+  background: var(--input-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+#add-location-form input:focus,
+#add-location-form select:focus {
+  background: var(--input-focus-bg);
+  border-color: var(--border-accent);
+  box-shadow: 0 0 0 3px var(--input-focus-shadow);
+  outline: none;
+}
+
+#add-location-form button {
+  background: var(--primary-300);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+#add-location-form button:hover {
+  background: var(--primary-400);
+}
+
+#cancel-dialog {
+  background: var(--input-bg);
+  color: var(--text-secondary);
+}
+
+#cancel-dialog:hover {
+  background: var(--input-focus-bg);
+  color: var(--text-primary);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* MARK: For save opening */
+#set-location-dialog {
+  max-width: 25vw;
+  width: 90%;
+  text-align: center;
+}
+
+#set-start, #set-end, #delete-location {
+  background: var(--primary-300);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  padding: 0.5vw;
+  cursor: pointer;
+  margin: 1vw;
+  transition: 0.3s;
+}
+
+#set-start:hover , #set-end:hover {
+  background: var(--primary-400);
+}
+
+#delete-location:hover {
+  background: #dc2626;
+}
+
+dialog[open] {
+  pointer-events: auto;
+  z-index: 9999;
 }
