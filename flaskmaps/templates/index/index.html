@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,18 +11,20 @@
 
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.png') }}">
 </head>
+
 <body>
     <div id="app">
         <div id="controls">
             <!-- Header section -->
             <div class="header">
-                <h1>🗺️ Navigation App</h1>
-                <p>Plan your route with live tracking</p>
+                <h1> LOCATR.AI</h1>
+                <p>Navigation made simpler</p>
             </div>
 
             <div class="location-input">
-                <label for="start-input"> <img src="{{ url_for('static', filename='images/start.svg') }}" alt="Start Icon">
-                     Start Location</label>
+                <label for="start-input"> <img src="{{ url_for('static', filename='images/start.svg') }}"
+                        alt="Start Icon">
+                    Start Location</label>
                 <div class="input-group">
                     <input type="text" id="start-input" placeholder="Enter start location...">
                     <button id="start-current-btn" class="btn btn-secondary">Use Current</button>
@@ -29,7 +32,8 @@
                 <div class="suggestions" id="start-suggestions"></div>
             </div>
             <div class="location-input">
-                <label for="end-input"><img src="{{ url_for('static', filename='images/target.svg') }}" alt="Start Icon"> End Location</label>
+                <label for="end-input"><img src="{{ url_for('static', filename='images/target.svg') }}"
+                        alt="Start Icon"> End Location</label>
                 <div class="input-group">
                     <input type="text" id="end-input" placeholder="Enter end location...">
                     <button id="end-current-btn" class="btn btn-secondary">Use Current</button>
@@ -49,9 +53,14 @@
             </div>
 
             <div id="poi-buttons">
-                <button class="poi-btn" data-type="hospital"><img src="{{ url_for('static', filename='images/hospital.svg') }}" alt="Hospital Icon"> Hospital</button>
-                <button class="poi-btn" data-type="atm"><img src="{{ url_for('static', filename='images/atm.svg') }}" alt="ATM Icon"> ATM</button>
-                <button class="poi-btn" data-type="fuel"><img src="{{ url_for('static', filename='images/petrol.svg') }}" alt="Petrol Icon"> Petrol Pump</button>
+                <button class="poi-btn" data-type="hospital"><img
+                        src="{{ url_for('static', filename='images/hospital.svg') }}" alt="Hospital Icon">
+                    Hospital</button>
+                <button class="poi-btn" data-type="atm"><img src="{{ url_for('static', filename='images/atm.svg') }}"
+                        alt="ATM Icon"> ATM</button>
+                <button class="poi-btn" data-type="fuel"><img
+                        src="{{ url_for('static', filename='images/petrol.svg') }}" alt="Petrol Icon"> Petrol
+                    Pump</button>
             </div>
 
             <div class="controls-row">
@@ -61,26 +70,32 @@
                 </select>
                 <button id="calc-btn" class="btn btn-primary">Calculate Route</button>
             </div>
+            <!-- Add this button in the controls-row section, after the Calculate Route button -->
+            <button id="clear-btn" class="btn btn-clear">Clear All</button>
 
-            <button id="theme-toggle" title="Toggle Light/Dark Mode" data-sun="{{ url_for('static', filename='images/sun.svg') }}" data-moon="{{ url_for('static', filename='images/moon.svg') }}">
+            <button id="theme-toggle" title="Toggle Light/Dark Mode"
+                data-sun="{{ url_for('static', filename='images/sun.svg') }}"
+                data-moon="{{ url_for('static', filename='images/moon.svg') }}">
                 <img src="{{ url_for('static', filename='images/moon.svg') }}" alt="Theme Toggle Icon">
             </button>
 
             <div id="route-info">
-                <div id="route-info-distance"> <img src="{{ url_for('static', filename='images/ruler.svg') }}" alt="Measurement Icon">
+                <div id="route-info-distance"> <img src="{{ url_for('static', filename='images/ruler.svg') }}"
+                        alt="Measurement Icon">
                     &nbsp;&nbsp;Distance:&nbsp;
                     <span id="route-distance-value">--</span>
                 </div>
-                <div id="route-info-time"> <img src="{{ url_for('static', filename='images/alarm.svg') }}" alt="Time Icon">
+                <div id="route-info-time"> <img src="{{ url_for('static', filename='images/alarm.svg') }}"
+                        alt="Time Icon">
                     &nbsp;Time: &nbsp;
                     <span id="route-time-value">--</span>
                 </div>
             </div>
         </div>
         <div id="map">
-            
+
         </div>
-        </div>
+    </div>
     </div>
 
     <div id="status">Getting your location...</div>
@@ -91,17 +106,17 @@
 
             <label for="location-type">Location Type:</label>
             <select id="location-type">
-            <option value="current">Current</option>
-            <option value="start">Start</option>
-            <option value="end">End</option>
+                <option value="current">Current</option>
+                <option value="start">Start</option>
+                <option value="end">End</option>
             </select>
 
             <label for="location-name">Name:</label>
             <input type="text" id="location-name" required>
 
             <div style="margin-top: 1em; display: flex; justify-content: flex-end; gap: 0.5em;">
-            <button type="button" id="cancel-dialog">Cancel</button>
-            <button type="button" id="save-location">Save</button>
+                <button type="button" id="cancel-dialog">Cancel</button>
+                <button type="button" id="save-location">Save</button>
             </div>
         </form>
     </dialog>
@@ -117,26 +132,26 @@
 
     <div id="bottom-bar">
         {% if g.user %}
-            <button id="sign-in-button" onclick="location.href = '{{ url_for('auth.logout')}} '">Sign Out</button>
-            <button id="add-location-button">Save Location</button>
+        <button id="sign-in-button" onclick="location.href = '{{ url_for('auth.logout')}} '">Sign Out</button>
+        <button id="add-location-button">Save Location</button>
         {% else %}
-            <button id="sign-in-button" onclick='location.href = "{{url_for('auth.login')}}"'>Sign in</button>
+        <button id="sign-in-button" onclick='location.href = "{{url_for(' auth.login')}}"'>Sign in</button>
         {% endif %}
 
         <div id="locations">
             {% for location in locations %}
-                <div class="location-display" data-id="{{ location['id'] }}">
+            <div class="location-display" data-id="{{ location['id'] }}">
                 <div class="location-name">{{ location["name"] }}</div>
                 <div class="location-pos-x" hidden>{{ location["location_x"] }}</div>
                 <div class="location-pos-y" hidden>{{ location["location_y"] }}</div>
-                </div>
+            </div>
             {% endfor %}
         </div>
 
         {% if g.user %}
-            <div id="bottom-bar-text">
-                Saved Locations: 
-            </div>
+        <div id="bottom-bar-text">
+            Saved Locations:
+        </div>
         {% endif %}
     </div>
 
@@ -147,4 +162,5 @@
     <script>
     </script>
 </body>
+
 </html>

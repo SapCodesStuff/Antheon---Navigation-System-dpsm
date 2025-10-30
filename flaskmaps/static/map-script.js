@@ -2,20 +2,8 @@
 document.getElementById('start-input').value = '';
 document.getElementById('end-input').value = '';
 
-
 // ==================== THEME MANAGEMENT ====================
         
-
-const redIcon = L.icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",  // your custom marker
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  shadowSize: [41, 41]
-});
-
-
 // Get saved theme or default to dark
 let currentTheme = localStorage.getItem('theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
@@ -50,12 +38,11 @@ updateMapTiles();
 // Update theme toggle button icon
 function updateThemeIcon() {
     const themeToggle = document.getElementById('theme-toggle');
-    const sunIcon = themeToggle.dataset.sun; // the url is stored in data-sun attribute
-    const moonIcon = themeToggle.dataset.moon; // the url is stored in data-moon attribute
+    const sunIcon = themeToggle.dataset.sun;
+    const moonIcon = themeToggle.dataset.moon;
     const iconPath = currentTheme === 'dark' ? sunIcon : moonIcon;
     themeToggle.innerHTML = `<img src="${iconPath}" alt="Theme icon" class="theme-icon">`;
 }
-
 
 updateThemeIcon();
 
@@ -63,7 +50,7 @@ updateThemeIcon();
 document.getElementById('theme-toggle').addEventListener('click', () => {
     currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', currentTheme);
-    localStorage.setItem('theme', currentTheme); // Save preference
+    localStorage.setItem('theme', currentTheme);
     updateThemeIcon();
     updateMapTiles();
 });
@@ -71,6 +58,8 @@ document.getElementById('theme-toggle').addEventListener('click', () => {
 // ==================== MAP AND LOCATION VARIABLES ====================
 
 let currentMarker = null;
+let startMarker = null;
+let endMarker = null;
 let routingControl = null;
 let watchId = null;
 
@@ -78,6 +67,36 @@ let startLocation = null; // {lat, lng}
 let endLocation = null; // {lat, lng}
 
 let mapClickMode = null; // 'start' or 'end' or null
+
+// Custom red icon for current location
+const redIcon = L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
+// Green icon for start location
+const greenIcon = L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
+// Blue icon for end location
+const blueIcon = L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
 
 // ==================== GEOLOCATION FUNCTIONS ====================
 
@@ -98,9 +117,16 @@ function showPosition(position) {
     map.setView([lat, lng], 13);
     if (currentMarker) {
         map.removeLayer(currentMarker);
-        currentMarker.setIcon(redIcon);
     }
-    currentMarker = L.marker([lat, lng]).addTo(map).bindPopup('You are here').openPopup();
+    currentMarker = L.marker([lat, lng], { icon: redIcon }).addTo(map);
+    currentMarker.bindPopup('You are here').openPopup();
+    
+    // Add bounce animation
+    const markerElement = currentMarker.getElement();
+    if (markerElement) {
+        markerElement.classList.add('marker-bounce');
+    }
+    
     document.getElementById('status').textContent = `Location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 }
 
@@ -110,7 +136,6 @@ function updatePosition(position) {
     const lng = position.coords.longitude;
     if (currentMarker) {
         currentMarker.setLatLng([lat, lng]);
-        currentMarker.setIcon(redIcon);
     }
     document.getElementById('status').textContent = `Location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 }
@@ -130,6 +155,20 @@ document.getElementById('start-current-btn').addEventListener('click', () => {
         startLocation = { lat, lng };
         document.getElementById('start-input').value = `Current Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
         hideSuggestions('start');
+        
+        // Add start marker
+        if (startMarker) {
+            map.removeLayer(startMarker);
+        }
+        startMarker = L.marker([lat, lng], { icon: greenIcon }).addTo(map);
+        startMarker.bindPopup('Start Location');
+        
+        // Add bounce animation
+        const markerElement = startMarker.getElement();
+        if (markerElement) {
+            markerElement.classList.add('marker-bounce');
+            setTimeout(() => markerElement.classList.remove('marker-bounce'), 900);
+        }
     }
 });
 
@@ -141,6 +180,20 @@ document.getElementById('end-current-btn').addEventListener('click', () => {
         endLocation = { lat, lng };
         document.getElementById('end-input').value = `Current Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
         hideSuggestions('end');
+        
+        // Add end marker
+        if (endMarker) {
+            map.removeLayer(endMarker);
+        }
+        endMarker = L.marker([lat, lng], { icon: blueIcon }).addTo(map);
+        endMarker.bindPopup('End Location');
+        
+        // Add bounce animation
+        const markerElement = endMarker.getElement();
+        if (markerElement) {
+            markerElement.classList.add('marker-bounce');
+            setTimeout(() => markerElement.classList.remove('marker-bounce'), 900);
+        }
     }
 });
 
@@ -242,9 +295,37 @@ function selectSuggestion(item, type) {
     if (type === 'start') {
         startLocation = { lat, lng };
         document.getElementById('start-input').value = item.display_name;
+        
+        // Add start marker
+        if (startMarker) {
+            map.removeLayer(startMarker);
+        }
+        startMarker = L.marker([lat, lng], { icon: greenIcon }).addTo(map);
+        startMarker.bindPopup('Start Location');
+        
+        // Add bounce animation
+        const markerElement = startMarker.getElement();
+        if (markerElement) {
+            markerElement.classList.add('marker-bounce');
+            setTimeout(() => markerElement.classList.remove('marker-bounce'), 900);
+        }
     } else {
         endLocation = { lat, lng };
         document.getElementById('end-input').value = item.display_name;
+        
+        // Add end marker
+        if (endMarker) {
+            map.removeLayer(endMarker);
+        }
+        endMarker = L.marker([lat, lng], { icon: blueIcon }).addTo(map);
+        endMarker.bindPopup('End Location');
+        
+        // Add bounce animation
+        const markerElement = endMarker.getElement();
+        if (markerElement) {
+            markerElement.classList.add('marker-bounce');
+            setTimeout(() => markerElement.classList.remove('marker-bounce'), 900);
+        }
     }
     hideSuggestions(type);
 }
@@ -300,6 +381,20 @@ function findNearbyPOI(type) {
             endLocation = { lat: poi.lat, lng: poi.lon };
             document.getElementById('end-input').value = `${type.charAt(0).toUpperCase() + type.slice(1)} (${poi.lat.toFixed(4)}, ${poi.lon.toFixed(4)})`;
             hideSuggestions('end');
+            
+            // Add end marker
+            if (endMarker) {
+                map.removeLayer(endMarker);
+            }
+            endMarker = L.marker([poi.lat, poi.lon], { icon: blueIcon }).addTo(map);
+            endMarker.bindPopup(`${type.charAt(0).toUpperCase() + type.slice(1)} Location`);
+            
+            // Add bounce animation
+            const markerElement = endMarker.getElement();
+            if (markerElement) {
+                markerElement.classList.add('marker-bounce');
+                setTimeout(() => markerElement.classList.remove('marker-bounce'), 900);
+            }
         } else {
             alert('No nearby ' + type + ' found');
         }
@@ -316,6 +411,20 @@ map.on('click', (e) => {
         document.getElementById('start-input').value = `Map Click (${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)})`;
         hideSuggestions('start');
         
+        // Add start marker immediately
+        if (startMarker) {
+            map.removeLayer(startMarker);
+        }
+        startMarker = L.marker([e.latlng.lat, e.latlng.lng], { icon: greenIcon }).addTo(map);
+        startMarker.bindPopup('Start Location');
+        
+        // Add bounce animation
+        const markerElement = startMarker.getElement();
+        if (markerElement) {
+            markerElement.classList.add('marker-bounce');
+            setTimeout(() => markerElement.classList.remove('marker-bounce'), 900);
+        }
+        
         // Deactivate map click mode
         mapClickMode = null;
         document.getElementById('set-start-map').classList.remove('active');
@@ -327,6 +436,20 @@ map.on('click', (e) => {
         endLocation = { lat: e.latlng.lat, lng: e.latlng.lng };
         document.getElementById('end-input').value = `Map Click (${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)})`;
         hideSuggestions('end');
+        
+        // Add end marker immediately
+        if (endMarker) {
+            map.removeLayer(endMarker);
+        }
+        endMarker = L.marker([e.latlng.lat, e.latlng.lng], { icon: blueIcon }).addTo(map);
+        endMarker.bindPopup('End Location');
+        
+        // Add bounce animation
+        const markerElement = endMarker.getElement();
+        if (markerElement) {
+            markerElement.classList.add('marker-bounce');
+            setTimeout(() => markerElement.classList.remove('marker-bounce'), 900);
+        }
         
         // Deactivate map click mode
         mapClickMode = null;
@@ -369,9 +492,8 @@ function calculateRoute() {
             styles: [{color: '#2d8d00ff', opacity: 0.8, weight: 6}]
         },
         createMarker: function(i, wp, nWps) {
-            return L.marker(wp.latLng, {
-                draggable: true
-            });
+            // Return null to prevent routing control from creating its own markers
+            return null;
         }
     }).addTo(map);
 
@@ -390,12 +512,70 @@ function calculateRoute() {
     });
 }
 
+// ==================== CLEAR ALL FIELDS FUNCTION ====================
+
+function clearAllFields() {
+    // Clear input fields
+    document.getElementById('start-input').value = '';
+    document.getElementById('end-input').value = '';
+    
+    // Clear location variables
+    startLocation = null;
+    endLocation = null;
+    
+    // Remove markers
+    if (startMarker) {
+        map.removeLayer(startMarker);
+        startMarker = null;
+    }
+    if (endMarker) {
+        map.removeLayer(endMarker);
+        endMarker = null;
+    }
+    
+    // Remove route
+    if (routingControl) {
+        map.removeControl(routingControl);
+        routingControl = null;
+    }
+    
+    // Hide route info
+    document.getElementById('route-info').classList.remove('active');
+    
+    // Hide suggestions
+    hideSuggestions('start');
+    hideSuggestions('end');
+    
+    // Deactivate map click modes
+    mapClickMode = null;
+    document.getElementById('set-start-map').classList.remove('active');
+    document.getElementById('set-end-map').classList.remove('active');
+    map.getDiv().style.cursor = '';
+    
+    // Reset status
+    if (currentMarker) {
+        const lat = currentMarker.getLatLng().lat;
+        const lng = currentMarker.getLatLng().lng;
+        document.getElementById('status').textContent = `Location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    } else {
+        document.getElementById('status').textContent = 'All fields cleared';
+    }
+}
+
+// Add event listener to clear button (will be added in HTML)
+document.addEventListener('DOMContentLoaded', () => {
+    const clearBtn = document.getElementById('clear-btn');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', clearAllFields);
+    }
+});
+
 // ==================== INITIALIZE APP ====================
 
 // Start location tracking on page load
 getLocation();
 
-//MARK: Save dialog
+// MARK: Save dialog
 document.addEventListener('DOMContentLoaded', () => {
     const addBtn = document.getElementById('add-location-button');
     const dialog = document.getElementById('add-location-dialog');
@@ -440,96 +620,126 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-        const res = await fetch('/add_location', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, x: lat, y: lng })
-        });
+            const res = await fetch('/add_location', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, x: lat, y: lng })
+            });
 
-        const data = await res.json();
-        if (data.success) {
-            alert('Location saved!');
-            dialog.close();
-            window.location.reload();
-        } else {
-            alert('Error: ' + (data.error || 'Unknown error'));
-        }
+            const data = await res.json();
+            if (data.success) {
+                alert('Location saved!');
+                dialog.close();
+                window.location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+            }
         } catch (err) {
-        console.error(err);
-        alert('Failed to send location.');
+            console.error(err);
+            alert('Failed to send location.');
         }
     });
 });
 
-//MARK: Load saved locations
+// MARK: Load saved locations
 document.addEventListener('DOMContentLoaded', () => {
-  const locationsContainer = document.getElementById('locations');
-  const dialog = document.getElementById('set-location-dialog');
-  const nameDisplay = document.getElementById('selected-location-name');
-  const btnStart = document.getElementById('set-start');
-  const btnEnd = document.getElementById('set-end');
-  const btnDelete = document.getElementById('delete-location');
+    const locationsContainer = document.getElementById('locations');
+    const dialog = document.getElementById('set-location-dialog');
+    const nameDisplay = document.getElementById('selected-location-name');
+    const btnStart = document.getElementById('set-start');
+    const btnEnd = document.getElementById('set-end');
+    const btnDelete = document.getElementById('delete-location');
 
-  let selectedLat = null;
-  let selectedLng = null;
-  let selectedName = '';
-  let selectedId = null;
-  let selectedDiv = null;
+    let selectedLat = null;
+    let selectedLng = null;
+    let selectedName = '';
+    let selectedId = null;
+    let selectedDiv = null;
 
-  if (!locationsContainer) return;
+    if (!locationsContainer) return;
 
-  // Handle clicking on a location
-  locationsContainer.addEventListener('click', (e) => {
-    const locationDiv = e.target.closest('.location-display');
-    if (!locationDiv) return;
+    // Handle clicking on a location
+    locationsContainer.addEventListener('click', (e) => {
+        const locationDiv = e.target.closest('.location-display');
+        if (!locationDiv) return;
 
-    selectedId = locationDiv.dataset.id;
-    selectedDiv = locationDiv;
-    selectedLat = parseFloat(locationDiv.querySelector('.location-pos-y').textContent);
-    selectedLng = parseFloat(locationDiv.querySelector('.location-pos-x').textContent);
-    selectedName = locationDiv.querySelector('.location-name').textContent.trim();
+        selectedId = locationDiv.dataset.id;
+        selectedDiv = locationDiv;
+        selectedLat = parseFloat(locationDiv.querySelector('.location-pos-y').textContent);
+        selectedLng = parseFloat(locationDiv.querySelector('.location-pos-x').textContent);
+        selectedName = locationDiv.querySelector('.location-name').textContent.trim();
 
-    nameDisplay.textContent = `Location: ${selectedName}`;
-    dialog.showModal();
-  });
+        nameDisplay.textContent = `Location: ${selectedName}`;
+        dialog.showModal();
+    });
 
-  // Set as Start
-  btnStart.addEventListener('click', () => {
-    startLocation = { lat: selectedLat, lng: selectedLng };
-    const input = document.getElementById('start-input');
-    if (input)
-      input.value = `Saved Location (${selectedLat.toFixed(4)}, ${selectedLng.toFixed(4)})`;
-    hideSuggestions('start');
-    dialog.close();
-  });
-
-  // Set as End
-  btnEnd.addEventListener('click', () => {
-    endLocation = { lat: selectedLat, lng: selectedLng };
-    const input = document.getElementById('end-input');
-    if (input)
-      input.value = `Saved Location (${selectedLat.toFixed(4)}, ${selectedLng.toFixed(4)})`;
-    hideSuggestions('end');
-    dialog.close();
-  });
-
-  // Delete
-  btnDelete.addEventListener('click', async () => {
-    if (!confirm(`Delete "${selectedName}"?`)) return;
-
-    try {
-      const res = await fetch(`/delete_location/${selectedId}`, { method: 'DELETE' });
-      const data = await res.json();
-
-      if (data.success) {
-        selectedDiv.remove();
+    // Set as Start
+    btnStart.addEventListener('click', () => {
+        startLocation = { lat: selectedLat, lng: selectedLng };
+        const input = document.getElementById('start-input');
+        if (input)
+            input.value = `Saved Location (${selectedLat.toFixed(4)}, ${selectedLng.toFixed(4)})`;
+        hideSuggestions('start');
+        
+        // Add start marker
+        if (startMarker) {
+            map.removeLayer(startMarker);
+        }
+        startMarker = L.marker([selectedLat, selectedLng], { icon: greenIcon }).addTo(map);
+        startMarker.bindPopup('Start Location');
+        
+        // Add bounce animation
+        const markerElement = startMarker.getElement();
+        if (markerElement) {
+            markerElement.classList.add('marker-bounce');
+            setTimeout(() => markerElement.classList.remove('marker-bounce'), 900);
+        }
+        
         dialog.close();
-      } else {
-        alert('Error: ' + (data.error || 'Unknown error'));
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Failed to delete location.');
-    }
-  });
+    });
+
+    // Set as End
+    btnEnd.addEventListener('click', () => {
+        endLocation = { lat: selectedLat, lng: selectedLng };
+        const input = document.getElementById('end-input');
+        if (input)
+            input.value = `Saved Location (${selectedLat.toFixed(4)}, ${selectedLng.toFixed(4)})`;
+        hideSuggestions('end');
+        
+        // Add end marker
+        if (endMarker) {
+            map.removeLayer(endMarker);
+        }
+        endMarker = L.marker([selectedLat, selectedLng], { icon: blueIcon }).addTo(map);
+        endMarker.bindPopup('End Location');
+        
+        // Add bounce animation
+        const markerElement = endMarker.getElement();
+        if (markerElement) {
+            markerElement.classList.add('marker-bounce');
+            setTimeout(() => markerElement.classList.remove('marker-bounce'), 900);
+        }
+        
+        dialog.close();
+    });
+
+    // Delete
+    btnDelete.addEventListener('click', async () => {
+        if (!confirm(`Delete "${selectedName}"?`)) return;
+
+        try {
+            const res = await fetch(`/delete_location/${selectedId}`, { method: 'DELETE' });
+            const data = await res.json();
+
+            if (data.success) {
+                selectedDiv.remove();
+                dialog.close();
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Failed to delete location.');
+        }
+    });
 });
