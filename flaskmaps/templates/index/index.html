@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation App</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.png') }}">
+</head>
+<body>
+    <div id="app">
+        <div id="controls">
+            <!-- Header section -->
+            <div class="header">
+                <h1>🗺️ Navigation App</h1>
+                <p>Plan your route with live tracking</p>
+            </div>
+
+            <div class="location-input">
+                <label for="start-input"> <img src="{{ url_for('static', filename='images/start.svg') }}" alt="Start Icon">
+                     Start Location</label>
+                <div class="input-group">
+                    <input type="text" id="start-input" placeholder="Enter start location...">
+                    <button id="start-current-btn" class="btn btn-secondary">Use Current</button>
+                </div>
+                <div class="suggestions" id="start-suggestions"></div>
+            </div>
+            <div class="location-input">
+                <label for="end-input"><img src="{{ url_for('static', filename='images/target.svg') }}" alt="Start Icon"> End Location</label>
+                <div class="input-group">
+                    <input type="text" id="end-input" placeholder="Enter end location...">
+                    <button id="end-current-btn" class="btn btn-secondary">Use Current</button>
+                </div>
+                <div class="suggestions" id="end-suggestions"></div>
+            </div>
+
+            <div class="map-click-buttons">
+                <button class="map-click-btn" id="set-start-map">
+                    <img src="{{ url_for('static', filename='images/pin.svg') }}" id="Before-text" alt="Start Icon">
+                    <label id="after-img">Set Start on Map</label>
+                </button>
+                <button class="map-click-btn" id="set-end-map">
+                    <img src="{{ url_for('static', filename='images/pin.svg') }}" id="Before-text" alt="End Icon">
+                    <label id="after-img">Set End on Map</label>
+                </button>
+            </div>
+
+            <div id="poi-buttons">
+                <button class="poi-btn" data-type="hospital"><img src="{{ url_for('static', filename='images/hospital.svg') }}" alt="Hospital Icon"> Hospital</button>
+                <button class="poi-btn" data-type="atm"><img src="{{ url_for('static', filename='images/atm.svg') }}" alt="ATM Icon"> ATM</button>
+                <button class="poi-btn" data-type="fuel"><img src="{{ url_for('static', filename='images/petrol.svg') }}" alt="Petrol Icon"> Petrol Pump</button>
+            </div>
+
+            <div class="controls-row">
+                <select id="mode-select">
+                    <option value="driving">🚗 Car</option>
+                    <option value="cycling">🏍️ Two-Wheeler</option>
+                </select>
+                <button id="calc-btn" class="btn btn-primary">Calculate Route</button>
+            </div>
+            <div id="route-info"></div>
+        </div>
+        <div id="map">
+            <button id="theme-toggle" title="Toggle Light/Dark Mode">🌙</button>
+        </div>
+        </div>
+    </div>
+
+    <div id="status">Getting your location...</div>
+
+    <div id="bottom-bar">
+        <button id="sign-in-button">Sign in</div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <script src="{{ url_for('static', filename='map-script.js') }}"></script>
+    <script>
+    </script>
+</body>
+</html>

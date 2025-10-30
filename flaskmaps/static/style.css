@@ -1,0 +1,558 @@
+:root[data-theme="dark"] {
+    /* Background Colors */
+    --bg-gradient-start: #0a0e27;
+    --bg-gradient-end: #1a1d3a;
+    --controls-bg-start: #0f1419;
+    --controls-bg-end: #1a1f2e;
+    --input-bg: #1e293b;
+    --input-focus-bg: #0f172a;
+    --status-bg: rgba(30, 41, 59, 0.5);
+
+    /* Borders & Shadows */
+    --border-color: #334155;
+    --border-accent: #2563eb;
+    --shadow-accent: rgba(37, 99, 235, 0.3);
+    --input-focus-shadow: rgba(59, 130, 246, 0.1);
+
+    /* Primary Blue Shades */
+    --primary-100: #60a5fa;
+    --primary-200: #3b82f6;
+    --primary-300: #2563eb;
+    --primary-400: #1d4ed8;
+    --primary-500: #1e40af;
+    --primary-600: #1e3a8a;
+    --primary-700: #1e40af;
+
+    /* Text Colors */
+    --text-primary: #e0e0e0;
+    --text-secondary: #94a3b8;
+    --text-placeholder: #64748b;
+
+    /* Others */
+    --route-info-bg-start: #1e3a8a;
+    --route-info-bg-end: #1e40af;
+    
+    /* Map Tiles */
+    --map-tiles: 'https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png';
+}
+
+/* ================== LIGHT MODE ================== */
+:root[data-theme="light"] {
+    /* Background Colors */
+    --bg-gradient-start: #e0f2fe;
+    --bg-gradient-end: #bae6fd;
+    --controls-bg-start: #ffffff;
+    --controls-bg-end: #f8fafc;
+    --input-bg: #f1f5f9;
+    --input-focus-bg: #ffffff;
+    --status-bg: rgba(241, 245, 249, 0.9);
+
+    /* Borders & Shadows */
+    --border-color: #cbd5e1;
+    --border-accent: #2563eb;
+    --shadow-accent: rgba(37, 99, 235, 0.2);
+    --input-focus-shadow: rgba(59, 130, 246, 0.2);
+
+    /* Primary Blue Shades */
+    --primary-100: #3b82f6;
+    --primary-200: #2563eb;
+    --primary-300: #1d4ed8;
+    --primary-400: #1e40af;
+    --primary-500: #1e3a8a;
+    --primary-600: #1e3a8a;
+    --primary-700: #1e40af;
+
+    /* Text Colors */
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --text-placeholder: #94a3b8;
+
+    /* Others */
+    --route-info-bg-start: #2563eb;
+    --route-info-bg-end: #1d4ed8;
+    
+    /* Map Tiles */
+    --map-tiles: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+}
+
+/* Default to dark mode */
+:root {
+    --bg-gradient-start: #0a0e27;
+    --bg-gradient-end: #1a1d3a;
+    --controls-bg-start: #0f1419;
+    --controls-bg-end: #1a1f2e;
+    --input-bg: #1e293b;
+    --input-focus-bg: #0f172a;
+    --status-bg: rgba(30, 41, 59, 0.5);
+    --border-color: #334155;
+    --border-accent: #2563eb;
+    --shadow-accent: rgba(37, 99, 235, 0.3);
+    --input-focus-shadow: rgba(59, 130, 246, 0.1);
+    --primary-100: #60a5fa;
+    --primary-200: #3b82f6;
+    --primary-300: #2563eb;
+    --primary-400: #1d4ed8;
+    --primary-500: #1e40af;
+    --primary-600: #1e3a8a;
+    --primary-700: #1e40af;
+    --text-primary: #e0e0e0;
+    --text-secondary: #94a3b8;
+    --text-placeholder: #64748b;
+    --route-info-bg-start: #1e3a8a;
+    --route-info-bg-end: #1e40af;
+}
+
+/* ------------------ RESET ------------------ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ------------------ BODY ------------------ */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+    color: var(--text-primary);
+    height: 100vh;
+    overflow: hidden;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+#app {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    max-width: 100%;
+}
+
+/* ------------------ CONTROLS ------------------ */
+#controls {
+    width: 35vw;
+    padding: 20px;
+    background: linear-gradient(135deg, var(--controls-bg-start) 0%, var(--controls-bg-end) 100%);
+    border-right: 2px solid var(--border-accent);
+    box-shadow: 4px 0 20px var(--shadow-accent);
+    overflow-y: auto;
+    flex-shrink: 0;
+    transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+/* ------------------ THEME TOGGLE BUTTON ------------------ */
+#theme-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-300) 0%, var(--primary-400) 100%);
+    border: none;
+    cursor: pointer;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px var(--shadow-accent);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+#theme-toggle:hover {
+    transform: scale(1.1) rotate(15deg);
+    box-shadow: 0 6px 20px var(--shadow-accent);
+}
+
+/* ------------------ HEADER ------------------ */
+.header {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.header h1 {
+    font-family: monospace;
+    font-size: 24px;
+    color: var(--primary-100);
+    margin-bottom: 5px;
+}
+
+.header p {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* ------------------ INPUTS ------------------ */
+.location-input {
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.location-input label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--primary-100);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.location-input input {
+    flex: 1;
+    min-width: 200px;
+    padding: 12px 16px;
+    background: var(--input-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.location-input input:focus {
+    outline: none;
+    border-color: var(--primary-200);
+    background: var(--input-focus-bg);
+    box-shadow: 0 0 0 3px var(--input-focus-shadow);
+}
+
+.location-input input::placeholder {
+    color: var(--text-placeholder);
+}
+
+/* ------------------ BUTTONS ------------------ */
+.btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-300) 0%, var(--primary-400) 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-400) 0%, var(--primary-500) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
+}
+
+.btn-secondary {
+    background: var(--input-bg);
+    color: var(--primary-100);
+    border: 2px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--border-color);
+    border-color: var(--primary-200);
+}
+
+.btn-secondary.active {
+    background: linear-gradient(135deg, var(--primary-300) 0%, var(--primary-400) 100%);
+    color: white;
+    border-color: var(--primary-300);
+}
+
+/* ------------------ SUGGESTIONS ------------------ */
+.suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--input-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    margin-top: 5px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+}
+
+.suggestion-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover {
+    background: var(--border-color);
+    color: var(--primary-100);
+}
+
+/* ------------------ POI BUTTONS ------------------ */
+#poi-buttons {
+    margin: 20px 0;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.poi-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-size: 13px;
+    box-shadow: 0 4px 15px rgba(30, 58, 138, 0.4);
+}
+
+.poi-btn:hover {
+    background: linear-gradient(135deg, var(--primary-700) 0%, var(--primary-400) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(30, 64, 175, 0.6);
+}
+
+/* ------------------ CONTROLS ROW ------------------ */
+.controls-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+/* ------------------ MAP CLICK MODE BUTTONS ------------------ */
+.map-click-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.map-click-btn {
+    flex: 1;
+    padding: 10px 16px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.3s ease;
+}
+
+.map-click-btn:hover {
+    background: var(--border-color);
+    border-color: var(--primary-200);
+}
+
+.map-click-btn.active {
+    background: linear-gradient(135deg, var(--primary-300) 0%, var(--primary-400) 100%);
+    color: white;
+    border-color: var(--primary-300);
+}
+
+#mode-select {
+    flex: 1;
+    min-width: 150px;
+    padding: 12px 16px;
+    background: var(--input-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#mode-select:focus {
+    outline: none;
+    border-color: var(--primary-200);
+    background: var(--input-focus-bg);
+}
+
+#calc-btn {
+    font-family: monospace;
+    flex: 1;
+    min-width: 150px;
+}
+
+/* ------------------ STATUS & ROUTE ------------------ */
+#status {
+  display: block;
+  position: fixed;
+  left: 37vw;
+  bottom: 6vh;
+  z-index: 400;
+  font-family: monospace;
+  border-radius: 20px;
+  padding: 12px;
+  background: var(--status-bg);
+  font-size: 12px;
+}
+
+#route-info {
+    margin-top: 15px;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--route-info-bg-start) 0%, var(--route-info-bg-end) 100%);
+    border-radius: 8px;
+    font-weight: 600;
+    color: white;
+    font-size: 14px;
+    box-shadow: 0 4px 15px rgba(30, 58, 138, 0.4);
+    display: none;
+}
+
+#route-info.active {
+    display: block;
+}
+
+/* ------------------ MAP ------------------ */
+#map {
+    flex: 1;
+    height: 95%;
+    position: relative;
+}
+
+/* ------------------ SCROLLBAR ------------------ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--input-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-200);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-300);
+}
+
+/* ------------------ RESPONSIVE ------------------ */
+@media (max-width: 768px) {
+    #app {
+        flex-direction: column;
+    }
+
+    #controls {
+        width: 100%;
+        max-height: 40vh;
+        border-right: none;
+        border-bottom: 2px solid var(--border-accent);
+        box-shadow: 0 4px 20px var(--shadow-accent);
+        padding: 15px;
+    }
+
+    .location-input label {
+        font-size: 12px;
+    }
+
+    #theme-toggle {
+        width: 45px;
+        height: 45px;
+        font-size: 20px;
+    }
+
+    .location-input input,
+    .btn,
+    #mode-select {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .input-group {
+        flex-direction: column;
+    }
+
+    .location-input input {
+        min-width: 100%;
+    }
+
+    #poi-buttons {
+        flex-direction: column;
+    }
+
+    .poi-btn {
+        width: 100%;
+        min-width: 100%;
+    }
+
+    .controls-row {
+        flex-direction: column;
+    }
+
+    #mode-select,
+    #calc-btn {
+        width: 100%;
+        min-width: 100%;
+    }
+
+
+    #route-info {
+        font-size: 12px;
+        padding: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    #controls {
+        padding: 10px;
+    }
+
+    .btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    .poi-btn {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+
+    #theme-toggle {
+        top: 10px;
+        right: 10px;
+    }
+}
+
+/* ------------------ LEAFLET OVERRIDES ------------------ */
+.leaflet-routing-container {
+    background: var(--input-bg) !important;
+    color: var(--text-primary) !important;
+    border: 2px solid var(--border-color) !important;
+    border-radius: 8px !important;
+}
+
+.leaflet-routing-alt {
+    background: var(--input-focus-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+.leaflet-routing-alt:hover {
+    background: var(--border-color) !important;
+}

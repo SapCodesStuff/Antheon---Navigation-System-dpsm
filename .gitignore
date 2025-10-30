@@ -1,0 +1,8 @@
+.venv/*
+instance/*
+.get/*
+.vscode/*
+.DS_Store
+*.log
+*.pyc
+temp/*
