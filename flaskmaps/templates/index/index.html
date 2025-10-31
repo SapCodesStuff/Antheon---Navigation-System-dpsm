@@ -135,7 +135,7 @@
         <button id="sign-in-button" onclick="location.href = '{{ url_for('auth.logout')}} '">Sign Out</button>
         <button id="add-location-button">Save Location</button>
         {% else %}
-        <button id="sign-in-button" onclick='location.href = "{{url_for(' auth.login')}}"'>Sign in</button>
+        <button id="sign-in-button" onclick='location.href = "{{url_for('auth.login')}}"'>Sign in</button>
         {% endif %}
 
         <div id="locations">

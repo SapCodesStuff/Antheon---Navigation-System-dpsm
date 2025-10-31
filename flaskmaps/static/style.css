@@ -927,3 +927,7 @@ dialog[open] {
   pointer-events: auto;
   z-index: 9999;
 }
+
+.leaflet-routing-icon {
+  filter: invert(50%);
+}

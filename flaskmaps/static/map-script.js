@@ -199,6 +199,8 @@ document.getElementById('end-current-btn').addEventListener('click', () => {
 
 // ==================== MAP CLICK MODE BUTTONS ====================
 
+const mapDiv = document.getElementById('map');
+
 // Enable map click mode for start location
 document.getElementById('set-start-map').addEventListener('click', function() {
     if (mapClickMode === 'start') {
@@ -206,14 +208,14 @@ document.getElementById('set-start-map').addEventListener('click', function() {
         mapClickMode = null;
         this.classList.remove('active');
         document.getElementById('set-end-map').classList.remove('active');
-        map.getDiv().style.cursor = '';
+        mapDiv.style.cursor = '';
         document.getElementById('status').textContent = 'Map click mode disabled';
     } else {
         // Activate start mode
         mapClickMode = 'start';
         this.classList.add('active');
         document.getElementById('set-end-map').classList.remove('active');
-        map.getDiv().style.cursor = 'crosshair';
+        mapDiv.style.cursor = 'crosshair';
         document.getElementById('status').textContent = '📍 Click on map to set START location';
     }
 });
@@ -225,14 +227,14 @@ document.getElementById('set-end-map').addEventListener('click', function() {
         mapClickMode = null;
         this.classList.remove('active');
         document.getElementById('set-start-map').classList.remove('active');
-        map.getDiv().style.cursor = '';
+        mapDiv.style.cursor = '';
         document.getElementById('status').textContent = 'Map click mode disabled';
     } else {
         // Activate end mode
         mapClickMode = 'end';
         this.classList.add('active');
         document.getElementById('set-start-map').classList.remove('active');
-        map.getDiv().style.cursor = 'crosshair';
+        mapDiv.style.cursor = 'crosshair';
         document.getElementById('status').textContent = '📍 Click on map to set END location';
     }
 });
@@ -428,7 +430,7 @@ map.on('click', (e) => {
         // Deactivate map click mode
         mapClickMode = null;
         document.getElementById('set-start-map').classList.remove('active');
-        map.getDiv().style.cursor = '';
+        mapDiv.style.cursor = '';
         document.getElementById('status').textContent = `✅ START location set: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
         
     } else if (mapClickMode === 'end') {
@@ -454,7 +456,7 @@ map.on('click', (e) => {
         // Deactivate map click mode
         mapClickMode = null;
         document.getElementById('set-end-map').classList.remove('active');
-        map.getDiv().style.cursor = '';
+        mapDiv.style.cursor = '';
         document.getElementById('status').textContent = `✅ END location set: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
     }
 });
