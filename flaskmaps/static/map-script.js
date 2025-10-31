@@ -68,6 +68,12 @@ let endLocation = null; // {lat, lng}
 
 let mapClickMode = null; // 'start' or 'end' or null
 
+// Layer group to hold POI markers so we can clear them easily
+let poiLayerGroup = L.layerGroup().addTo(map);
+
+// Keep last route coordinates (array of {lat,lng}) to search POIs along route
+let lastRouteCoords = null;
+
 // Custom red icon for current location
 const redIcon = L.icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
@@ -199,8 +205,6 @@ document.getElementById('end-current-btn').addEventListener('click', () => {
 
 // ==================== MAP CLICK MODE BUTTONS ====================
 
-const mapDiv = document.getElementById('map');
-
 // Enable map click mode for start location
 document.getElementById('set-start-map').addEventListener('click', function() {
     if (mapClickMode === 'start') {
@@ -208,14 +212,14 @@ document.getElementById('set-start-map').addEventListener('click', function() {
         mapClickMode = null;
         this.classList.remove('active');
         document.getElementById('set-end-map').classList.remove('active');
-        mapDiv.style.cursor = '';
+        map.getDiv().style.cursor = '';
         document.getElementById('status').textContent = 'Map click mode disabled';
     } else {
         // Activate start mode
         mapClickMode = 'start';
         this.classList.add('active');
         document.getElementById('set-end-map').classList.remove('active');
-        mapDiv.style.cursor = 'crosshair';
+        map.getDiv().style.cursor = 'crosshair';
         document.getElementById('status').textContent = '📍 Click on map to set START location';
     }
 });
@@ -227,14 +231,14 @@ document.getElementById('set-end-map').addEventListener('click', function() {
         mapClickMode = null;
         this.classList.remove('active');
         document.getElementById('set-start-map').classList.remove('active');
-        mapDiv.style.cursor = '';
+        map.getDiv().style.cursor = '';
         document.getElementById('status').textContent = 'Map click mode disabled';
     } else {
         // Activate end mode
         mapClickMode = 'end';
         this.classList.add('active');
         document.getElementById('set-start-map').classList.remove('active');
-        mapDiv.style.cursor = 'crosshair';
+        map.getDiv().style.cursor = 'crosshair';
         document.getElementById('status').textContent = '📍 Click on map to set END location';
     }
 });
@@ -355,52 +359,186 @@ document.querySelectorAll('.poi-btn').forEach(btn => {
     });
 });
 
-// Find nearby POI using Overpass API
+// Clear POI markers
+function clearPoiMarkers() {
+    poiLayerGroup.clearLayers();
+}
+
+// Build a rich popup for an Overpass element
+function buildPoiPopup(el, minDistMeters) {
+    const tags = el.tags || {};
+    const name = tags.name || tags.amenity || 'POI';
+    const amenity = tags.amenity || Object.values(tags)[0] || 'amenity';
+
+    let html = `<div class="poi-popup"><strong>${escapeHtml(name)}</strong><br><em>${escapeHtml(amenity)}</em>`;
+    if (typeof minDistMeters === 'number') {
+        html += `<br><small>${(minDistMeters/1000).toFixed(2)} km from route</small>`;
+    }
+
+    // Address
+    const addrParts = [];
+    if (tags['addr:housenumber']) addrParts.push(escapeHtml(tags['addr:housenumber']));
+    if (tags['addr:street']) addrParts.push(escapeHtml(tags['addr:street']));
+    if (tags['addr:city']) addrParts.push(escapeHtml(tags['addr:city']));
+    if (tags['addr:postcode']) addrParts.push(escapeHtml(tags['addr:postcode']));
+    if (addrParts.length > 0) html += `<br>${addrParts.join(', ')}`;
+
+    if (tags.phone) html += `<br>☎️ <a href="tel:${escapeHtml(tags.phone)}">${escapeHtml(tags.phone)}</a>`;
+    if (tags.website) html += `<br>🔗 <a href="${escapeHtml(tags.website)}" target="_blank" rel="noopener">Website</a>`;
+    if (tags.opening_hours) html += `<br>🕒 ${escapeHtml(tags.opening_hours)}`;
+
+    // show raw tags as a details section (helpful for debugging)
+    const interesting = [];
+    ['operator','brand','name:en'].forEach(k => { if (tags[k]) interesting.push(`${k}: ${escapeHtml(tags[k])}`); });
+    if (interesting.length > 0) html += `<br><small>${interesting.join(' • ')}</small>`;
+
+    html += `</div>`;
+    return html;
+}
+
+// Choose a colored marker icon for a given amenity
+function poiIconForAmenity(amenity) {
+    // Use colored marker images from pointhi repository
+    const base = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-';
+    let color = 'grey';
+    if (!amenity) color = 'grey';
+    else {
+        const a = amenity.toLowerCase();
+        if (a.includes('hospital') || a.includes('clinic') || a.includes('doctors')) color = 'red';
+        else if (a.includes('fuel') || a.includes('gas')) color = 'orange';
+        else if (a.includes('atm') || a.includes('bank')) color = 'blue';
+        else if (a.includes('restaurant') || a.includes('cafe') || a.includes('bar')) color = 'violet';
+        else if (a.includes('parking')) color = 'black';
+        else if (a.includes('hotel') || a.includes('lodging')) color = 'green';
+        else color = 'grey';
+    }
+    return L.icon({
+        iconUrl: base + color + '.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+}
+
+// Minimal HTML escape for popup strings
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"]/g, function(m) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]; });
+}
+
+// Find nearby POI. If a route exists, search along the route; otherwise search around current location
 function findNearbyPOI(type) {
-    if (!currentMarker) return;
+    if (lastRouteCoords && lastRouteCoords.length > 0) {
+        findPOIAlongRoute(type);
+    } else {
+        findNearbyPOIAroundCurrent(type);
+    }
+}
+
+// Search for POIs along the last route using a bbox + distance filter
+function findPOIAlongRoute(type) {
+    if (!lastRouteCoords || lastRouteCoords.length === 0) return alert('No route available to search along.');
+    clearPoiMarkers();
+
+    // Build bbox around route
+    let minLat = Infinity, minLng = Infinity, maxLat = -Infinity, maxLng = -Infinity;
+    lastRouteCoords.forEach(pt => {
+        minLat = Math.min(minLat, pt.lat);
+        minLng = Math.min(minLng, pt.lng);
+        maxLat = Math.max(maxLat, pt.lat);
+        maxLng = Math.max(maxLng, pt.lng);
+    });
+
+    // Expand bbox slightly (degrees). ~0.02° ≈ 2km depending on latitude
+    const pad = 0.02;
+    minLat -= pad; minLng -= pad; maxLat += pad; maxLng += pad;
+
+    const types = [type];
+    fetchPOIsByBBox(types, {south: minLat, west: minLng, north: maxLat, east: maxLng})
+        .then(elements => {
+            // Filter returned POIs to those within a threshold (meters) from the route
+            const radiusMeters = 800; // show POIs within 800m of route
+            elements.forEach(el => {
+                const coords = el.type === 'node' ? {lat: el.lat, lng: el.lon} : (el.center ? {lat: el.center.lat, lng: el.center.lon} : null);
+                if (!coords) return;
+
+                // Compute min distance from POI to any route point
+                let minDist = Infinity;
+                for (let i = 0; i < lastRouteCoords.length; i++) {
+                    const d = map.distance(L.latLng(coords.lat, coords.lng), L.latLng(lastRouteCoords[i].lat, lastRouteCoords[i].lng));
+                    if (d < minDist) minDist = d;
+                    if (minDist <= radiusMeters) break;
+                }
+
+                if (minDist <= radiusMeters) {
+                    const amenity = (el.tags && (el.tags.amenity || Object.values(el.tags)[0])) || type;
+                    const marker = L.marker([coords.lat, coords.lng], { icon: poiIconForAmenity(amenity) }).bindPopup(buildPoiPopup(el, minDist));
+                    poiLayerGroup.addLayer(marker);
+                }
+            });
+            if (poiLayerGroup.getLayers().length === 0) {
+                alert('No POIs of type ' + type + ' found near the route.');
+            } else {
+                // Fit map to show route and POIs
+                const group = L.featureGroup([poiLayerGroup]);
+                // Do not fit strictly to POIs only; keep user view as-is. Optional.
+            }
+        })
+        .catch(err => {
+            console.error('Overpass error', err);
+            alert('Failed to fetch POIs along route.');
+        });
+}
+
+// Search for POIs around current location (fallback / original behavior)
+function findNearbyPOIAroundCurrent(type) {
+    if (!currentMarker) return alert('Current location not available');
+    clearPoiMarkers();
     const lat = currentMarker.getLatLng().lat;
     const lng = currentMarker.getLatLng().lng;
-    let query = '';
-    
-    // Build Overpass query based on POI type
-    if (type === 'hospital') {
-        query = '[out:json];node(around:5000,' + lat + ',' + lng + ')[amenity=hospital];out;';
-    } else if (type === 'atm') {
-        query = '[out:json];node(around:5000,' + lat + ',' + lng + ')[amenity=atm];out;';
-    } else if (type === 'fuel') {
-        query = '[out:json];node(around:5000,' + lat + ',' + lng + ')[amenity=fuel];out;';
-    }
-    
-    // Fetch POI data from Overpass API
-    fetch('https://overpass-api.de/api/interpreter', {
-        method: 'POST',
-        body: query
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.elements.length > 0) {
-            const poi = data.elements[0];
-            endLocation = { lat: poi.lat, lng: poi.lon };
-            document.getElementById('end-input').value = `${type.charAt(0).toUpperCase() + type.slice(1)} (${poi.lat.toFixed(4)}, ${poi.lon.toFixed(4)})`;
-            hideSuggestions('end');
-            
-            // Add end marker
-            if (endMarker) {
-                map.removeLayer(endMarker);
-            }
-            endMarker = L.marker([poi.lat, poi.lon], { icon: blueIcon }).addTo(map);
-            endMarker.bindPopup(`${type.charAt(0).toUpperCase() + type.slice(1)} Location`);
-            
-            // Add bounce animation
-            const markerElement = endMarker.getElement();
-            if (markerElement) {
-                markerElement.classList.add('marker-bounce');
-                setTimeout(() => markerElement.classList.remove('marker-bounce'), 900);
-            }
-        } else {
-            alert('No nearby ' + type + ' found');
-        }
+    const radius = 5000; // meters
+
+    const types = [type];
+    // Build simple Overpass around query using around
+    let qParts = [];
+    types.forEach(t => {
+        qParts.push(`node(around:${radius},${lat},${lng})[amenity=${t}];`);
+        qParts.push(`way(around:${radius},${lat},${lng})[amenity=${t}];`);
+        qParts.push(`relation(around:${radius},${lat},${lng})[amenity=${t}];`);
     });
+    const query = `[out:json][timeout:25];(${qParts.join('')});out center;`;
+
+    fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: query })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.elements || data.elements.length === 0) return alert('No nearby ' + type + ' found');
+            data.elements.forEach(el => {
+                const coords = el.type === 'node' ? {lat: el.lat, lng: el.lon} : (el.center ? {lat: el.center.lat, lng: el.center.lon} : null);
+                if (!coords) return;
+                const amenity = (el.tags && (el.tags.amenity || Object.values(el.tags)[0])) || type;
+                const marker = L.marker([coords.lat, coords.lng], { icon: poiIconForAmenity(amenity) }).bindPopup(buildPoiPopup(el));
+                poiLayerGroup.addLayer(marker);
+            });
+        })
+        .catch(err => { console.error(err); alert('Failed to fetch POIs'); });
+}
+
+// Fetch POIs by bbox for array of types. Returns Promise resolving to Overpass elements array
+function fetchPOIsByBBox(types, bbox) {
+    // types: array like ['fuel','atm']
+    const south = bbox.south, west = bbox.west, north = bbox.north, east = bbox.east;
+    let parts = [];
+    types.forEach(t => {
+        parts.push(`node(${south},${west},${north},${east})[amenity=${t}];`);
+        parts.push(`way(${south},${west},${north},${east})[amenity=${t}];`);
+        parts.push(`relation(${south},${west},${north},${east})[amenity=${t}];`);
+    });
+    const query = `[out:json][timeout:25];(${parts.join('')});out center;`;
+    return fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: query })
+        .then(r => r.json())
+        .then(data => data.elements || []);
 }
 
 // ==================== MAP CLICK HANDLER ====================
@@ -430,7 +568,7 @@ map.on('click', (e) => {
         // Deactivate map click mode
         mapClickMode = null;
         document.getElementById('set-start-map').classList.remove('active');
-        mapDiv.style.cursor = '';
+        map.getDiv().style.cursor = '';
         document.getElementById('status').textContent = `✅ START location set: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
         
     } else if (mapClickMode === 'end') {
@@ -456,7 +594,7 @@ map.on('click', (e) => {
         // Deactivate map click mode
         mapClickMode = null;
         document.getElementById('set-end-map').classList.remove('active');
-        mapDiv.style.cursor = '';
+        map.getDiv().style.cursor = '';
         document.getElementById('status').textContent = `✅ END location set: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
     }
 });
@@ -476,6 +614,9 @@ function calculateRoute() {
     const mode = document.getElementById('mode-select').value;
     
     // Remove existing route if any
+    // Clear previous POIs when calculating a new route
+    clearPoiMarkers();
+
     if (routingControl) {
         map.removeControl(routingControl);
     }
@@ -485,6 +626,7 @@ function calculateRoute() {
         waypoints: [
             L.latLng(startLocation.lat, startLocation.lng),
             L.latLng(endLocation.lat, endLocation.lng)
+            
         ],
         router: L.Routing.osrmv1({
             profile: mode
@@ -511,6 +653,60 @@ function calculateRoute() {
         distanceSpan.textContent = `${distanceKm} km`;
         timeSpan.textContent = `${timeMin} minutes (${mode})`;
         routeInfo.classList.add('active');
+        
+        // Extract route coordinates into lastRouteCoords (robust to different formats)
+        const rawCoords = routes[0].coordinates || (routes[0].geometry && routes[0].geometry.coordinates) || [];
+        lastRouteCoords = rawCoords.map(c => {
+            if (Array.isArray(c)) {
+                // array could be [lat, lng] or [lng, lat] — detect by latitude range
+                const a = Number(c[0]);
+                const b = Number(c[1]);
+                if (Math.abs(a) <= 90 && Math.abs(b) <= 180) {
+                    // assume [lat, lng]
+                    return { lat: a, lng: b };
+                } else {
+                    // fallback: assume [lng, lat]
+                    return { lat: b, lng: a };
+                }
+            } else {
+                return { lat: c.lat || c[1], lng: c.lng || c[0] };
+            }
+        });
+
+        // Automatically fetch a few common POI types along the route
+        try {
+            // build bbox for the route
+            let minLat = Infinity, minLng = Infinity, maxLat = -Infinity, maxLng = -Infinity;
+            lastRouteCoords.forEach(pt => {
+                minLat = Math.min(minLat, pt.lat);
+                minLng = Math.min(minLng, pt.lng);
+                maxLat = Math.max(maxLat, pt.lat);
+                maxLng = Math.max(maxLng, pt.lng);
+            });
+            const pad = 0.02;
+            const bbox = { south: minLat - pad, west: minLng - pad, north: maxLat + pad, east: maxLng + pad };
+            const defaultTypes = ['fuel', 'atm', 'hospital', 'restaurant', 'cafe'];
+            fetchPOIsByBBox(defaultTypes, bbox).then(elements => {
+                const radiusMeters = 800;
+                elements.forEach(el => {
+                    const coords = el.type === 'node' ? {lat: el.lat, lng: el.lon} : (el.center ? {lat: el.center.lat, lng: el.center.lon} : null);
+                    if (!coords) return;
+                    let minDist = Infinity;
+                    for (let i = 0; i < lastRouteCoords.length; i++) {
+                        const d = map.distance(L.latLng(coords.lat, coords.lng), L.latLng(lastRouteCoords[i].lat, lastRouteCoords[i].lng));
+                        if (d < minDist) minDist = d;
+                        if (minDist <= radiusMeters) break;
+                    }
+                    if (minDist <= radiusMeters) {
+                        const amenity = (el.tags && (el.tags.amenity || Object.values(el.tags)[0])) || 'poi';
+                        const marker = L.marker([coords.lat, coords.lng], { icon: poiIconForAmenity(amenity) }).bindPopup(buildPoiPopup(el, minDist));
+                        poiLayerGroup.addLayer(marker);
+                    }
+                });
+            }).catch(err => console.error('Auto POI fetch failed', err));
+        } catch (err) {
+            console.error('Error processing route coords for POI fetch', err);
+        }
     });
 }
 
@@ -540,6 +736,8 @@ function clearAllFields() {
         map.removeControl(routingControl);
         routingControl = null;
     }
+    // Clear POI markers
+    clearPoiMarkers();
     
     // Hide route info
     document.getElementById('route-info').classList.remove('active');
