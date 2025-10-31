@@ -901,8 +901,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         selectedId = locationDiv.dataset.id;
         selectedDiv = locationDiv;
-        selectedLat = parseFloat(locationDiv.querySelector('.location-pos-y').textContent);
-        selectedLng = parseFloat(locationDiv.querySelector('.location-pos-x').textContent);
+    // location_pos-x stores the latitude (location_x), location_pos-y stores the longitude (location_y)
+    selectedLat = parseFloat(locationDiv.querySelector('.location-pos-x').textContent);
+    selectedLng = parseFloat(locationDiv.querySelector('.location-pos-y').textContent);
         selectedName = locationDiv.querySelector('.location-name').textContent.trim();
 
         nameDisplay.textContent = `Location: ${selectedName}`;
@@ -925,11 +926,11 @@ document.addEventListener('DOMContentLoaded', () => {
         startMarker.bindPopup('Start Location');
         
         // Add bounce animation
-        const markerElement = startMarker.getElement();
-        if (markerElement) {
-            markerElement.classList.add('marker-bounce');
-            setTimeout(() => markerElement.classList.remove('marker-bounce'), 900);
-        }
+        // const markerElement = startMarker.getElement();
+        // if (markerElement) {
+        //     markerElement.classList.add('marker-bounce');
+        //     setTimeout(() => markerElement.classList.remove('marker-bounce'), 900);
+        // }
         
         dialog.close();
     });
