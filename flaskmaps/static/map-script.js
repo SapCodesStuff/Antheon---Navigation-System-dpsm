@@ -428,6 +428,35 @@ function escapeHtml(str) {
     return String(str).replace(/[&<>"]/g, function(m) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]; });
 }
 
+// Set a POI (Overpass element) as the current END location
+function setPoiAsEnd(coords, el) {
+    if (!coords) return;
+    const tags = el.tags || {};
+    const name = tags.name || tags.amenity || `POI (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`;
+
+    endLocation = { lat: coords.lat, lng: coords.lng };
+    const input = document.getElementById('end-input');
+    if (input) input.value = `${name} (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`;
+    hideSuggestions('end');
+
+    // Add end marker (blue)
+    if (endMarker) {
+        map.removeLayer(endMarker);
+    }
+    endMarker = L.marker([coords.lat, coords.lng], { icon: blueIcon }).addTo(map);
+    endMarker.bindPopup('End Location: ' + escapeHtml(name)).openPopup();
+
+    // Bounce animation
+    const markerElement = endMarker.getElement();
+    if (markerElement) {
+        markerElement.classList.add('marker-bounce');
+        setTimeout(() => markerElement.classList.remove('marker-bounce'), 900);
+    }
+    
+    // Update status
+    document.getElementById('status').textContent = `✅ END location set: ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`;
+}
+
 // Find nearby POI. If a route exists, search along the route; otherwise search around current location
 function findNearbyPOI(type) {
     if (lastRouteCoords && lastRouteCoords.length > 0) {
@@ -474,7 +503,10 @@ function findPOIAlongRoute(type) {
 
                 if (minDist <= radiusMeters) {
                     const amenity = (el.tags && (el.tags.amenity || Object.values(el.tags)[0])) || type;
-                    const marker = L.marker([coords.lat, coords.lng], { icon: poiIconForAmenity(amenity) }).bindPopup(buildPoiPopup(el, minDist));
+                    const marker = L.marker([coords.lat, coords.lng], { icon: poiIconForAmenity(amenity) });
+                    marker.bindPopup(buildPoiPopup(el, minDist));
+                    // clicking a POI sets it as the END location
+                    marker.on('click', () => setPoiAsEnd(coords, el));
                     poiLayerGroup.addLayer(marker);
                 }
             });
@@ -518,7 +550,9 @@ function findNearbyPOIAroundCurrent(type) {
                 const coords = el.type === 'node' ? {lat: el.lat, lng: el.lon} : (el.center ? {lat: el.center.lat, lng: el.center.lon} : null);
                 if (!coords) return;
                 const amenity = (el.tags && (el.tags.amenity || Object.values(el.tags)[0])) || type;
-                const marker = L.marker([coords.lat, coords.lng], { icon: poiIconForAmenity(amenity) }).bindPopup(buildPoiPopup(el));
+                const marker = L.marker([coords.lat, coords.lng], { icon: poiIconForAmenity(amenity) });
+                marker.bindPopup(buildPoiPopup(el));
+                marker.on('click', () => setPoiAsEnd(coords, el));
                 poiLayerGroup.addLayer(marker);
             });
         })
@@ -699,7 +733,9 @@ function calculateRoute() {
                     }
                     if (minDist <= radiusMeters) {
                         const amenity = (el.tags && (el.tags.amenity || Object.values(el.tags)[0])) || 'poi';
-                        const marker = L.marker([coords.lat, coords.lng], { icon: poiIconForAmenity(amenity) }).bindPopup(buildPoiPopup(el, minDist));
+                        const marker = L.marker([coords.lat, coords.lng], { icon: poiIconForAmenity(amenity) });
+                        marker.bindPopup(buildPoiPopup(el, minDist));
+                        marker.on('click', () => setPoiAsEnd(coords, el));
                         poiLayerGroup.addLayer(marker);
                     }
                 });
